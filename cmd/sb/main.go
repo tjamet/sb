@@ -2,40 +2,52 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"log/slog"
 	"os"
 
-	"github.com/spf13/cobra"
-	"github.com/tjamet/sb/pkg/logging"
 	"github.com/tjamet/sb/pkg/sandbox"
 )
 
 func main() {
-	var verbose bool
 
-	rootCmd := &cobra.Command{
-		Use:   "sb [flags] <command> [args...]",
-		Short: "Run a command in a macOS sandbox",
-		Long: `sb runs a command inside a macOS sandbox-exec profile with restricted
-filesystem access. Permissions are configured via YAML files stored
-in ~/.config/sb/<command>.yaml.`,
-		Args:              cobra.MinimumNArgs(1),
-		DisableFlagParsing: false,
-		SilenceUsage:      true,
-		TraverseChildren:  true,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if verbose {
-				logging.EnableSyslog()
-			}
-			cfg, err := sandbox.FromCommand(args[0])
-			if err != nil {
-				return fmt.Errorf("loading configuration: %w", err)
-			}
-			return sandbox.Run(cfg, args[1:])
-		},
+	logWriter := io.Discard
+	logLevel := slog.LevelError
+
+	switch os.Getenv("SB_LOG_LEVEL") {
+	case "":
+	case "debug":
+		logWriter = os.Stderr
+		logLevel = slog.LevelDebug
+	case "info":
+		logWriter = os.Stderr
+		logLevel = slog.LevelInfo
+	case "warn":
+		logWriter = os.Stderr
+		logLevel = slog.LevelWarn
+	case "error":
+		logWriter = os.Stderr
+		logLevel = slog.LevelError
+	default:
+		fmt.Fprintf(os.Stderr, "invalid log level: %s (expected: debug, info, warn, error)\n", os.Getenv("SB_LOG_LEVEL"))
 	}
-	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "enable debug logging to macOS system log (Console.app)")
+	slog.SetDefault(slog.New(slog.NewTextHandler(logWriter, &slog.HandlerOptions{Level: logLevel})))
 
-	if err := rootCmd.Execute(); err != nil {
+	args := os.Args
+
+	if len(args) < 2 {
+		fmt.Fprintf(os.Stderr, "usage: %s <command> [args...]\n", args[0])
+		os.Exit(1)
+	}
+
+	cfg, err := sandbox.FromCommand(args[1])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+	err = sandbox.Run(cfg, args[1:])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 }

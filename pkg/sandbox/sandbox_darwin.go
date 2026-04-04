@@ -41,7 +41,7 @@ func Run(cfg *Config, args []string) error {
 		if !os.IsNotExist(err) {
 			return fmt.Errorf("checking sandbox profile %s: %w", sandboxPath, err)
 		}
-		slog.Debug("no custom sandbox profile found", "path", sandboxPath)
+		slog.Info("no custom sandbox profile found", "path", sandboxPath)
 	} else {
 		slog.Debug("importing custom sandbox profile", "path", sandboxPath)
 		sandboxInstructions = append(sandboxInstructions, fmt.Sprintf(`(import "%s")`, sandboxPath))
@@ -90,6 +90,6 @@ func Run(cfg *Config, args []string) error {
 		pgm = targetProgram
 	}
 
-	slog.Debug("executing command", "program", pgm, "argv", cmd)
+	slog.Info("executing command", "program", pgm, "argv", cmd)
 	return syscall.Exec(pgm, cmd, os.Environ())
 }

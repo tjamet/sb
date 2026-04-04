@@ -15,15 +15,8 @@ go install github.com/tjamet/sb/cmd/sb@latest
 ## Usage
 
 ```sh
-sb [flags] <command> [args...]
+sb <command> [args...]
 ```
-
-### Flags
-
-| Flag | Description |
-|------|-------------|
-| `-v`, `--verbose` | Enable debug logging to the macOS system log (Console.app) |
-| `-h`, `--help` | Show help |
 
 ### Examples
 
@@ -36,10 +29,10 @@ sb git status
 alias git="sb git"
 ```
 
-Run with debug logging enabled (viewable in Console.app, filter by "sb"):
+Run with debug logging enabled:
 
 ```sh
-sb -v git status
+env SB_LOG_LEVEL=info sb git status
 ```
 
 ## Configuration
@@ -122,10 +115,11 @@ log stream --style=compact --predicate 'sender=="Sandbox"'
 
 ## Debugging sb
 
-Enable verbose mode with `-v` to send debug logs to the macOS system log. View them in Console.app by filtering for the process `sb`:
+Logs are always enabled with the `SB_LOG_LEVEL` environment variable. View them in Console.app by filtering for the process `sb`:
 
 ```sh
-sb -v git status
+export SB_LOG_LEVEL=debug # | info | warn | error
+sb git status
 ```
 
 Or from the terminal:

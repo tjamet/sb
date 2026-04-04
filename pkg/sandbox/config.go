@@ -86,6 +86,7 @@ func FromCommand(command string) (*Config, error) {
 	commandName := filepath.Base(command)
 	home, err := getHomeDir()
 	if err != nil {
+		slog.Error("Unable to resolve home directory")
 		return nil, fmt.Errorf("resolving home directory: %w", err)
 	}
 	cwd, err := os.Getwd()
@@ -115,7 +116,7 @@ func FromCommand(command string) (*Config, error) {
 func fromConfigFile(cfg *Config) error {
 	fd, err := os.Open(cfg.configFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("opening config file %s: %w", cfg.configFile, err)
 	}
 	defer fd.Close()
 	decoder := yaml.NewDecoder(fd)
@@ -132,6 +133,7 @@ func getHomeDir() (string, error) {
 		if !ok {
 			return "", fmt.Errorf("cannot determine home directory ($HOME not set): %w", err)
 		}
+		slog.Warn("user.Current() failed, falling back to $HOME environment variable", "error", err)
 		return home, nil
 	}
 	return u.HomeDir, nil
