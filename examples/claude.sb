@@ -1,0 +1,48 @@
+(version 1)
+
+;; Some helpers to ease writing and reading the policy
+(define (home-relative relative-path) (string-append (param "HOME") relative-path))
+(define (home-subpath relative-path) (subpath (home-relative relative-path)))
+
+;; Default: everything is allowed
+(allow default)
+
+;; ...except user file access
+(deny file-read* (subpath "/Users/"))
+(deny file-write* (subpath "/Users/"))
+
+;; Allow reading the current user and its parent folder
+(allow file-read-metadata file-read-data (literal (param "HOME")))
+(allow file-read-metadata (literal "/Users"))
+
+;; ... common config paths read are allowed
+
+(allow file-read* (home-subpath "/.gitconfig"))
+(allow file-read* (home-subpath "/.config/git"))
+(allow file-read* (home-subpath "/.CFUserTextEncoding"))
+
+;; ... several applications, even command line, are using this cache
+
+(allow file-read* file-write* (home-subpath "/Library/Caches/"))
+(allow file-read* (home-subpath "/Library/Application Support"))
+(allow file-read* file-write* (home-subpath "/.cache"))
+(allow file-read* file-write* (home-subpath "/.local/share"))
+
+;; ... well-known dev tools are allowed
+
+(allow file-read* file-write* (home-subpath "/.npm"))
+(allow file-read* file-write* (home-subpath "/.terraform.d"))
+(allow file-read* file-write* (literal (home-relative "/.terraformrc")))
+(allow file-read* (home-subpath "/Library/Android"))
+
+
+;; ... claude has read/write access to itself
+(allow file-read* file-write* (home-subpath "/.claude"))
+(allow file-read* file-write* (home-subpath "/.serena"))
+(allow file-read* file-write* (home-subpath "/.claude.json"))
+(allow file-read* file-write* (home-subpath "/Applications/Claude Code URL Handler.app"))
+(allow file-read* file-write* (regex "^/Users/[^/]*/\.claude.*"))
+
+;; ... Full access to the current folder
+
+(allow file-read* file-write* (subpath (param "PWD")))

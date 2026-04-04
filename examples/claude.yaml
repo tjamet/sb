@@ -1,0 +1,26 @@
+#!/usr/bin/env sb
+command: claude
+# Allow reading the metadata (i.e. content) of the all the parent folders (until the home folder)
+# For example, if the current folder is /Users/user/program/some-program/projects/some-project, then it will add:
+# (allow file-read-metadata (literal "/Users/user/program/some-program/projects"))
+# (allow file-read-metadata (literal "/Users/user/program/some-program"))
+# (allow file-read-metadata (literal "/Users/user/program"))
+# (allow file-read-metadata (literal "/Users/user"))
+include_parents:
+- read-meta
+folders_in_parents:
+# Allows reading the all the content of all the parent folders (until the home folder)
+# For example, if the current folder is /Users/user/program/some-program/projects/some-project, then it will add:
+# (allow file-read-metadata file-read-data (subpath "/Users/user/program/some-program/projects/.claude"))
+# (allow file-read-metadata file-read-data (subpath "/Users/user/program/some-program/.claude"))
+# (allow file-read-metadata file-read-data (subpath "/Users/user/program/.claude"))
+# (allow file-read-metadata file-read-data (subpath "/Users/user/.claude"))
+- path: .claude
+  permissions:
+  - read-meta
+  - read-data
+# Specify specific environment variabls to be forwarded to the sandbox command -DVar=value.
+# This allows using, for example, `(param "PWD")` in claude.sb
+export_env:
+- PWD
+- HOME
