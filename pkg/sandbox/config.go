@@ -118,7 +118,8 @@ func fromConfigFile(cfg *Config) error {
 	if err != nil {
 		return fmt.Errorf("opening config file %s: %w", cfg.configFile, err)
 	}
-	defer fd.Close()
+	// Read-only file: a close error cannot lose data.
+	defer func() { _ = fd.Close() }()
 	decoder := yaml.NewDecoder(fd)
 	if err := decoder.Decode(&cfg); err != nil {
 		return fmt.Errorf("decoding %s: %w", cfg.configFile, err)
